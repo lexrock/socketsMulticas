@@ -7,7 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		A9EF8EE91AFF79B400BEFAAA /* main.c in Sources */ = {isa = PBXBuildFile; fileRef = A9EF8EE81AFF79B400BEFAAA /* main.c */; };
+		A9EF8EF01AFF7A6000BEFAAA /* Servidor.c in Sources */ = {isa = PBXBuildFile; fileRef = A9EF8EEF1AFF7A6000BEFAAA /* Servidor.c */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -24,7 +24,7 @@
 
 /* Begin PBXFileReference section */
 		A9EF8EE51AFF79B400BEFAAA /* socketsMulticas */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = socketsMulticas; sourceTree = BUILT_PRODUCTS_DIR; };
-		A9EF8EE81AFF79B400BEFAAA /* main.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = main.c; sourceTree = "<group>"; };
+		A9EF8EEF1AFF7A6000BEFAAA /* Servidor.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = Servidor.c; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -57,7 +57,7 @@
 		A9EF8EE71AFF79B400BEFAAA /* socketsMulticas */ = {
 			isa = PBXGroup;
 			children = (
-				A9EF8EE81AFF79B400BEFAAA /* main.c */,
+				A9EF8EEF1AFF7A6000BEFAAA /* Servidor.c */,
 			);
 			path = socketsMulticas;
 			sourceTree = "<group>";
@@ -118,7 +118,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				A9EF8EE91AFF79B400BEFAAA /* main.c in Sources */,
+				A9EF8EF01AFF7A6000BEFAAA /* Servidor.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
