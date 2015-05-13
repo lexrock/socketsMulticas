@@ -96,7 +96,7 @@ int main(int arguments, char **argv)
         printf("\n\n Argumentos del socket:\n");
         printf("\n\n\nMulticas:%s\nInterfaz: %s\nPuerto:%d\n",multicast,ifaz,port);
     }else
-        printf("\n\n Argumentos: 'Fichero.txt' [Opcionales]: multicas, interfaz, puerto\n\n");
+    printf("\n\n Argumentos: 'Fichero.txt' [Opcionales]: multicas, interfaz, puerto\n\n");
     
     f=fopen(argv[1], "r");
     
@@ -129,7 +129,7 @@ int main(int arguments, char **argv)
         ptr=strtok(NULL,separador);
         mensaje[i].durante=atoi(ptr);
         // printf("Mensaje: %s, repeticiones: %d, tiempo %d\n",mensaje[i].texto, mensaje[i].repeticiones, mensaje[i].tiempo);
-        printf("\n\nPara Hilo[%d] MENSAJE: %s",i,mensaje[i].texto);
+        printf("\n\nPara Hilo[%d] MENSAJE: %s\n",i,mensaje[i].texto);
         if(pthread_create(&thread[i], NULL, createThread, &mensaje[i])){
             printf("ERROR AL CREAR THREAD\n");
             exit(1);
@@ -177,27 +177,28 @@ void *createThread(void *msg)
     
     
     
-    
+    pthread_mutex_lock( &mutex1 );
     tEnvio=time(NULL);
     
     do {
         
-        pthread_mutex_lock( &mutex1 );
+        
         /* if (semop(semaforo, &entro, 1)==-1) {
          perror("Error wait");
          exit(1);
          }*/
         if (sendto(sock, m->texto, sizeof(m->texto), 0, (struct sockaddr*)&servaddr, sizeof(servaddr))<0)
-            printf("Error al mandar mensaje");
+        printf("Error al mandar mensaje");
         else
-            printf("Mensaje: %s\n",m->texto);
+        printf("Mensaje: %s\n",m->texto);
         sleep(m->cada);
         tRecp=time(NULL);
         /* if (semop(semaforo, &salgo, 1)==-1) {
          perror("Error signal\n");
          exit(1);
          }*/
-        pthread_mutex_unlock( &mutex1 );
+        
     } while ((tRecp-tEnvio)<m->durante);
+    pthread_mutex_unlock( &mutex1 );
     return NULL;
 }
