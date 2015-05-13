@@ -96,7 +96,7 @@ int main(int arguments, char **argv)
         printf("\n\n Argumentos del socket:\n");
         printf("\n\n\nMulticas:%s\nInterfaz: %s\nPuerto:%d\n",multicast,ifaz,port);
     }else
-    printf("\n\n Argumentos: 'Fichero.txt' [Opcionales]: multicas, interfaz, puerto\n\n");
+        printf("\n\n Argumentos: 'Fichero.txt' [Opcionales]: multicas, interfaz, puerto\n\n");
     
     f=fopen(argv[1], "r");
     
@@ -137,7 +137,8 @@ int main(int arguments, char **argv)
         if (i>=20) {
             printf("Demasiadas lineas para leer(limite de threads 20)\n\n");
             exit(1);
-        }i++;
+        }
+        i++;
         //        pthread_join(thread[i], NULL);
     }
     for (j=0; j<i; i++) {
@@ -153,12 +154,15 @@ int main(int arguments, char **argv)
 void leave(int signal)
 {
     int t;
+    char texto[30] ="\nEl Socket se ha cerrado\n";
     printf("Exit....\n");
     
-    for (t=0; t<10; t++) {
-        pthread_cancel(thread[t]);
-        printf("Killin thread...\n ");
-    }
+    if (sendto(sock, texto, sizeof(texto), 0, (struct sockaddr*)&servaddr, sizeof(servaddr))<0)
+        
+        for (t=0; t<10; t++) {
+            pthread_cancel(thread[t]);
+            printf("Killin thread...\n ");
+        }
     if (semctl(semaforo, 0, IPC_RMID)==-1) {
         perror("Error liberar semaforos\n");
     }
@@ -188,9 +192,9 @@ void *createThread(void *msg)
          exit(1);
          }*/
         if (sendto(sock, m->texto, sizeof(m->texto), 0, (struct sockaddr*)&servaddr, sizeof(servaddr))<0)
-        printf("Error al mandar mensaje");
+            printf("Error al mandar mensaje");
         else
-        printf("Mensaje: %s\n",m->texto);
+            printf("Mensaje: %s\n",m->texto);
         sleep(m->cada);
         tRecp=time(NULL);
         /* if (semop(semaforo, &salgo, 1)==-1) {
