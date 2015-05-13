@@ -1,4 +1,4 @@
-Reunión a las 12 en la sala de juntas+300+3600
-Tutorías los lunes y martes de 10 a 12+600+86400
-Esto es un mensaje que se envía cada 30 segundos+30+600
-Esto es un mensaje que se envía cada 10 segundos+10+600
+Reunión a las 12 en la sala de juntas#300#3600
+Tutorías los lunes y martes de 10 a 12#600#86400
+Esto es un mensaje que se envía cada 30 segundos#30#600
+Esto es un mensaje que se envía cada 10 segundos#10#600

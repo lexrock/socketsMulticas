@@ -41,10 +41,11 @@ int sock;
 struct sockaddr_in6	servaddr;
 struct ipv6_mreq ipv6mreq;
 pthread_t thread[10];
+pthread_mutex_t mutex1 = PTHREAD_MUTEX_INITIALIZER;
 typedef struct MENSAJE
 {
-    int tiempo; //duracion
-    int repeticiones; //frecuencia
+    int cada; //duracion
+    int durante; //frecuencia
     char texto[100];
 }MENSAJE;
 MENSAJE mensaje[20];
@@ -69,11 +70,11 @@ int main(int arguments, char **argv)
         exit(1);
     }
     //signal
-    entro.sem_num=1;
+    entro.sem_num=0;
     entro.sem_op=1;
     entro.sem_flg=0;
     //wait
-    salgo.sem_num=1;
+    salgo.sem_num=0;
     salgo.sem_op=-1;
     salgo.sem_flg=0;
     
@@ -124,11 +125,11 @@ int main(int arguments, char **argv)
         ptr=strtok(buffer,separador);
         strcpy(mensaje[i].texto, ptr);
         ptr=strtok(NULL,separador);
-        mensaje[i].repeticiones=atoi(ptr);
+        mensaje[i].cada=atoi(ptr);
         ptr=strtok(NULL,separador);
-        mensaje[i].tiempo=atoi(ptr);
+        mensaje[i].durante=atoi(ptr);
         // printf("Mensaje: %s, repeticiones: %d, tiempo %d\n",mensaje[i].texto, mensaje[i].repeticiones, mensaje[i].tiempo);
-        
+        printf("\n\nPara Hilo[%d] MENSAJE: %s",i,mensaje[i].texto);
         if(pthread_create(&thread[i], NULL, createThread, &mensaje[i])){
             printf("ERROR AL CREAR THREAD\n");
             exit(1);
@@ -137,14 +138,13 @@ int main(int arguments, char **argv)
             printf("Demasiadas lineas para leer(limite de threads 20)\n\n");
             exit(1);
         }i++;
-        
+        //        pthread_join(thread[i], NULL);
     }
     for (j=0; j<i; i++) {
         pthread_join(thread[j], NULL);
-        // thread[j]=0;
     }
     fclose(f);
-    printf("me piro\n");
+    printf("\nme piro\n");
     return 0;
     
     
@@ -177,22 +177,27 @@ void *createThread(void *msg)
     
     
     
+    
     tEnvio=time(NULL);
     
     do {
-        if (semop(semaforo, &entro, 1)==-1) {
-            perror("Error wait");
-            exit(1);
-        }
+        
+        pthread_mutex_lock( &mutex1 );
+        /* if (semop(semaforo, &entro, 1)==-1) {
+         perror("Error wait");
+         exit(1);
+         }*/
         if (sendto(sock, m->texto, sizeof(m->texto), 0, (struct sockaddr*)&servaddr, sizeof(servaddr))<0)
             printf("Error al mandar mensaje");
         else
             printf("Mensaje: %s\n",m->texto);
-        sleep(m->repeticiones);
+        sleep(m->cada);
         tRecp=time(NULL);
-        if (semop(semaforo, &salgo, 1)==-1) {
-            perror("Error signal\n");
-        }
-    } while ((tRecp-tEnvio)<m->tiempo);
-    return 0;
+        /* if (semop(semaforo, &salgo, 1)==-1) {
+         perror("Error signal\n");
+         exit(1);
+         }*/
+        pthread_mutex_unlock( &mutex1 );
+    } while ((tRecp-tEnvio)<m->durante);
+    return NULL;
 }
