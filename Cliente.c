@@ -50,7 +50,7 @@ int main(int arguments, char **argv)
     char tiempo[128];
     time_t t;
     struct tm *tiempoLocal;
-
+    
     
     
     signal(SIGINT,&leave);
@@ -70,9 +70,10 @@ int main(int arguments, char **argv)
         port=atoi(argv[3]);
         printf("\n\n Argumentos del socket:\n");
         printf("\n\n\nMulticas:%s\nInterfaz: %s\nPuerto:%d\n",multicast,ifaz,port);
-    }else
+    }else{
         printf("\n\n Argumentos [Opcionales]: multicas, interfaz, puerto\n\n");
-    
+        return 0;
+    }
     //CREAR UDP SOCKET (SOCK_DGRAM)
     if ((sock = socket(AF_INET6, SOCK_DGRAM, 0)) < 0) {
         perror ("\n\nERROR EN LA CREACION DEL SOCKET\n");
@@ -80,42 +81,44 @@ int main(int arguments, char **argv)
     }
     
     /* Unirse al grupo multicast */
-    if(setsockopt(sock,IPPROTO_IPV6,SO_REUSEADDR,&ipv6mreq,sizeof(ipv6mreq))<0)
-    {
-        perror("Llamada setsockopt para multicast\n");
-        exit(1);
-        
-    }
-    
+     if(setsockopt(sock,IPPROTO_IPV6,SO_REUSEADDR,&ipv6mreq,sizeof(ipv6mreq))<0)
+     {
+     perror("Llamada setsockopt para multicast\n");
+     exit(1);
+     
+     }
+
     servaddr.sin6_family = AF_INET6;
     servaddr.sin6_port   = htons(PUERTO);	/* daytime server */
-    servaddr.sin6_addr = in6addr_any;
-
+    servaddr.sin6_addr = in6addr_any; //recibir datagramas
+    inet_pton(AF_INET6,multicast,&ipv6mreq.ipv6mr_multiaddr); //para convertir las dir IPv4 e IPv6
+    ipv6mreq.ipv6mr_interface=if_nametoindex(ifaz);
     if(bind(sock, (struct sockaddr*)&servaddr, sizeof(servaddr)))
     {
         perror("Binding datagram socket error");
         close(sock);
         exit(1);
     }
-    inet_pton(AF_INET6,multicast,&servaddr.sin6_addr); //para convertir las dir IPv4 e IPv6
-    ipv6mreq.ipv6mr_interface=if_nametoindex(ifaz);
-    if(setsockopt(sock,IPPROTO_IPV6,IPV6_MULTICAST_IF,&ipv6mreq,sizeof(ipv6mreq))<0)
+    
+    //con IP_ADD_MEMBERSHIP peta...
+    if(setsockopt(sock,IPPROTO_IPV6,IPV6_JOIN_GROUP,&ipv6mreq,sizeof(ipv6mreq))<0)
     {
         printf("\n\ERROR SETSOCKOPT\n\n");
         exit(1);
         
     }
-    for (; ; ) {
+    for(;;)
+    {
         if (read(sock, buffer, sizeof(buffer))<0) {
             perror("Error leer scoket");
             exit(1);
+        }else{
+            t=time(0);
+            tiempoLocal = localtime(&t);
+            strftime(tiempo, 128, "%d/%m/%y %H:%M:%S", tiempoLocal);
+            printf("\n%s\n",tiempo);
+            printf("\nMeNSAJE: %s\n",buffer);
         }
-        t=time(0);
-        tiempoLocal = localtime(&t);
-        strftime(tiempo, 128, "TIME: %d/%m/%y %H:%M:%S", tiempoLocal);
-        printf("\n%s\n",tiempo);
-        printf("\nMeNSAJE: %s",buffer);
-        
     }
     
     return 0;
@@ -126,7 +129,7 @@ void leave(int signal)
     int t;
     printf("\nExit....\n");
     
-    printf("Closing shocket...\n");
+    printf("Closing client...\n");
     close(sock);
     exit(0);
     
