@@ -1,3 +1,10 @@
+/*
+ ** Fichero: Servidor.c
+ ** Autores:
+ ** Alejandro Hernández de la Iglesia 70900084P
+ ** Usuario: i0900084
+ */
+
 //
 //  Servidor.c
 //  socketsMulticas
@@ -27,6 +34,7 @@
 #include <sys/wait.h>
 #include <stdio.h>
 #include <sys/sem.h>
+#include <syslog.h>
 
 #define MAXLINE 4096        /* max text line length */
 /* Following shortens all the type casts of pointer arguments */
@@ -35,6 +43,7 @@
 #define INTERFAZ "eth0"
 #define PUERTO 7090
 #define MULTICAST "ff02::0084"
+FILE  *flog;
 int semaforo;
 struct sembuf entro, salgo;
 int sock;
@@ -44,8 +53,8 @@ pthread_t thread[10];
 pthread_mutex_t mutex1 = PTHREAD_MUTEX_INITIALIZER;
 typedef struct MENSAJE
 {
-    int cada; //duracion
-    int durante; //frecuencia
+    int cada;
+    int durante;
     char texto[100];
 }MENSAJE;
 MENSAJE mensaje[20];
@@ -63,6 +72,8 @@ int main(int arguments, char **argv)
     char buffer[100];
     char *ptr;
     FILE *f;
+    char texto[30] ="\nFin de transmisión...\n";
+    
     semaforo = semget(IPC_PRIVATE, 1, IPC_CREAT | 0600);
     if(semctl(semaforo, 0, SETVAL,1)==-1)
     {
@@ -81,7 +92,7 @@ int main(int arguments, char **argv)
     signal(SIGINT,&leave);
     switch (fork()) {
         case -1:
-            perror("Error daemond\n");
+            syslog(LOG_ERR, "Error Daemond\n");
             exit(1);
             break;
         case 0:
@@ -107,12 +118,11 @@ int main(int arguments, char **argv)
         printf("\n\n\nMulticas:%s\nInterfaz: %s\nPuerto:%d\n",multicast,ifaz,port);
     }else
         printf("\n\n Argumentos: 'Fichero.txt' [Opcionales]: multicas, interfaz, puerto\n\n");
-    
     f=fopen(argv[1], "r");
-    
+    flog=fopen("socketMulticas.log", "w");
     //CREAR UDP SOCKET (SOCK_DGRAM)
     if ((sock = socket(AF_INET6, SOCK_DGRAM, 0)) < 0) {
-        perror ("\n\nERROR EN LA CREACION DEL SOCKET\n");
+        syslog(LOG_ERR, "\n\nERROR EN LA CREACION DEL SOCKET\n");
         exit (-1);
     }
     //INICIALIZACION
@@ -126,10 +136,11 @@ int main(int arguments, char **argv)
     
     if(setsockopt(sock,IPPROTO_IPV6,IPV6_MULTICAST_IF,&ipv6mreq,sizeof(ipv6mreq))<0)
     {
-        printf("\n\ERROR SETSOCKOPT\n\n");
+        syslog(LOG_ERR, "\n\ERROR SETSOCKOPT\n\n");
         exit(1);
         
     }
+    
     while (fgets(buffer, 100, f)) {
         ptr=buffer;
         ptr=strtok(buffer,separador);
@@ -138,24 +149,27 @@ int main(int arguments, char **argv)
         mensaje[i].cada=atoi(ptr);
         ptr=strtok(NULL,separador);
         mensaje[i].durante=atoi(ptr);
-        // printf("Mensaje: %s, repeticiones: %d, tiempo %d\n",mensaje[i].texto, mensaje[i].repeticiones, mensaje[i].tiempo);
-        printf("\n\nPara Hilo[%d] MENSAJE: %s\n",i,mensaje[i].texto);
+        
         if(pthread_create(&thread[i], NULL, createThread, &mensaje[i])){
-            printf("ERROR AL CREAR THREAD\n");
+            syslog(LOG_ERR, "ERROR AL CREAR THREAD\n");
             exit(1);
         }
         if (i>=20) {
-            printf("Demasiadas lineas para leer(limite de threads 20)\n\n");
+            syslog(LOG_ERR,"Demasiadas lineas para leer(limite de threads 20)\n\n");
             exit(1);
         }
         i++;
-        //        pthread_join(thread[i], NULL);
     }
+
+    if (sendto(sock, texto, sizeof(texto), 0, (struct sockaddr*)&servaddr, sizeof(servaddr))<0)
+        syslog(LOG_ERR, "Error sen socket\n");
+    
     for (j=0; j<i; i++) {
         pthread_join(thread[j], NULL);
     }
+
     fclose(f);
-    printf("\nme piro\n");
+    close(sock);
     return 0;
     
     
@@ -165,18 +179,16 @@ void leave(int signal)
 {
     int t;
     char texto[30] ="\nEl Socket se ha cerrado\n";
-    printf("Exit....\n");
     
     if (sendto(sock, texto, sizeof(texto), 0, (struct sockaddr*)&servaddr, sizeof(servaddr))<0)
-        
+        syslog(LOG_ERR, "Error sen socket\n");
         for (t=0; t<10; t++) {
             pthread_cancel(thread[t]);
-            printf("Killin thread...\n ");
         }
     if (semctl(semaforo, 0, IPC_RMID)==-1) {
-        perror("Error liberar semaforos\n");
+        syslog(LOG_ERR, "Error liberar semaforos\n");
     }
-    printf("Closing shocket...\n");
+
     close(sock);
     exit(0);
     
@@ -202,9 +214,13 @@ void *createThread(void *msg)
          exit(1);
          }*/
         if (sendto(sock, m->texto, sizeof(m->texto), 0, (struct sockaddr*)&servaddr, sizeof(servaddr))<0)
-            printf("Error al mandar mensaje");
+            syslog(LOG_ERR, "Error al mandar mensaje");
+
+        
         else
-            printf("Mensaje: %s\n",m->texto);
+            syslog(LOG_INFO, "Mensaje: %s\n",m->texto);
+
+        
         sleep(m->cada);
         tRecp=time(NULL);
         /* if (semop(semaforo, &salgo, 1)==-1) {

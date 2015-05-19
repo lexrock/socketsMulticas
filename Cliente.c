@@ -1,3 +1,12 @@
+/*
+ ** Fichero: Cliente.c
+ ** Autores:
+ ** Alejandro Hernández de la Iglesia 70900084P
+ ** Usuario: i0900084
+ */
+
+
+
 //
 //  Cliente.c
 //  socketsMulticas
@@ -26,6 +35,7 @@
 #include <sys/wait.h>
 #include <stdio.h>
 #include <sys/sem.h>
+
 
 #define MAXLINE 4096        /* max text line length */
 /* Following shortens all the type casts of pointer arguments */
@@ -81,13 +91,13 @@ int main(int arguments, char **argv)
     }
     
     /* Unirse al grupo multicast */
-     if(setsockopt(sock,IPPROTO_IPV6,SO_REUSEADDR,&ipv6mreq,sizeof(ipv6mreq))<0)
-     {
-     perror("Llamada setsockopt para multicast\n");
-     exit(1);
-     
-     }
-
+    if(setsockopt(sock,IPPROTO_IPV6,SO_REUSEADDR,&ipv6mreq,sizeof(ipv6mreq))<0)
+    {
+        perror("Llamada setsockopt para multicast\n");
+        exit(1);
+        
+    }
+    
     servaddr.sin6_family = AF_INET6;
     servaddr.sin6_port   = htons(PUERTO);	/* daytime server */
     servaddr.sin6_addr = in6addr_any; //recibir datagramas
@@ -128,7 +138,11 @@ void leave(int signal)
 {
     int t;
     printf("\nExit....\n");
-    
+    if(setsockopt(sock, IPPROTO_IPV6, IPV6_LEAVE_GROUP, &ipv6mreq, sizeof(ipv6mreq)) < 0)
+    {
+        perror("\nError socket\n\n");
+        exit(1);
+    }
     printf("Closing client...\n");
     close(sock);
     exit(0);
