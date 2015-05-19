@@ -79,7 +79,17 @@ int main(int arguments, char **argv)
     salgo.sem_flg=0;
     
     signal(SIGINT,&leave);
-    
+    switch (fork()) {
+        case -1:
+            perror("Error daemond\n");
+            exit(1);
+            break;
+        case 0:
+            break;
+            
+        default:
+            return 0;
+    }
     if (arguments==2)
     {
         port=PUERTO;
