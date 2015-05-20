@@ -99,7 +99,7 @@ int main(int arguments, char **argv)
     }
     
     servaddr.sin6_family = AF_INET6;
-    servaddr.sin6_port   = htons(PUERTO);	/* daytime server */
+    servaddr.sin6_port   = htons(port);	/* daytime server */
     servaddr.sin6_addr = in6addr_any; //recibir datagramas
     inet_pton(AF_INET6,multicast,&ipv6mreq.ipv6mr_multiaddr); //para convertir las dir IPv4 e IPv6
     ipv6mreq.ipv6mr_interface=if_nametoindex(ifaz);
@@ -117,6 +117,9 @@ int main(int arguments, char **argv)
         exit(1);
         
     }
+    printf("+----------+\n");
+    printf("| MENSAJES |\n");
+    printf("+----------+\n");
     for(;;)
     {
         if (read(sock, buffer, sizeof(buffer))<0) {
